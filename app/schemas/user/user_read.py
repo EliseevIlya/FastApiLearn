@@ -1,0 +1,8 @@
+from datetime import datetime
+from pydantic import BaseModel, EmailStr
+
+
+class UserRead(BaseModel):
+    id: int
+    email: EmailStr
+    created_at: datetime
