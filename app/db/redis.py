@@ -1,4 +1,6 @@
 import json
+from typing import Any, AsyncGenerator
+
 from loguru import logger
 import redis.asyncio as redis
 
@@ -87,3 +89,11 @@ class RedisClient:
 
 
 redis_client_init = RedisClient()
+
+
+async def get_redis() -> AsyncGenerator[RedisClient, Any]:
+    await redis_client_init.connect()
+    try:
+        yield redis_client_init
+    finally:
+        pass
