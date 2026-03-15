@@ -1,0 +1,2 @@
+# FastApiLearn
+learning fastAPI + SQLModel
