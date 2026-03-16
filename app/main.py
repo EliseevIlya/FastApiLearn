@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api import auth_router
 from app.core.loguru_config import setup_logging
 from app.db.database import engine
 from app.db.redis import redis_client_init
@@ -30,6 +31,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.include_router(auth_router)
 
 
 @app.get("/health")
