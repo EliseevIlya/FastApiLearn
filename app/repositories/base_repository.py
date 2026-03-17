@@ -20,7 +20,7 @@ class BaseRepository(Generic[ModelType]):
         statement = select(self.model)
 
         if options:
-            statement = statement.options(selectinload(*options))
+            statement = statement.options(*options)
 
         statement = statement.limit(limit).offset(offset)
 

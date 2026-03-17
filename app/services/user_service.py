@@ -1,5 +1,3 @@
-from sqlalchemy.exc import IntegrityError
-
 from app.core.exceptions import EmailAlreadyExistsException
 from app.core.security.password import hash_password
 from app.models import User

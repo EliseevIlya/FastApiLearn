@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from fastapi import HTTPException
-from sqlalchemy.exc import IntegrityError
 
 from app.core.config import get_refresh_expire_days
 from app.core.security.jwt import create_access_token, create_refresh_token, decode_token
@@ -52,12 +51,7 @@ class AuthService:
                 password_hash=hash_password(password)
             )
 
-            try:
-                await self.uow.users.create(user)
-            except IntegrityError:
-                raise IntegrityError
-            except Exception:
-                raise Exception
+            await self.uow.users.create(user)
 
             return await self.create_tokens(user.id)
 

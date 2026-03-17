@@ -43,7 +43,7 @@ def create_refresh_token(user_id: int) -> tuple[str, str]:
     return token, jti
 
 
-def decode_token(token: str) -> dict[str, Any]:
+def decode_token(token: str) -> dict[str, Any] | None:
     try:
         payload = jwt.decode(
             token,
