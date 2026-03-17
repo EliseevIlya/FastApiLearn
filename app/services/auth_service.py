@@ -1,9 +1,13 @@
+from datetime import datetime
+
 from fastapi import HTTPException
 
 from app.core.config import get_refresh_expire_days
 from app.core.security.jwt import create_access_token, create_refresh_token, decode_token
 from app.core.security.password import verify_password, hash_password
 from app.models import User
+from app.schemas.jwt.logout_request import LogoutRequest
+from app.schemas.jwt.token_response import TokenResponse
 from app.schemas.user.user_create import UserCreate
 from app.schemas.user.user_login import UserLogin
 
@@ -15,6 +19,22 @@ class AuthService:
     def __init__(self, uow, redis):
         self.uow = uow
         self.redis = redis
+
+    async def create_tokens(self, user_id: int) -> dict[str, str]:
+        access = create_access_token(user_id)
+
+        refresh, jti = create_refresh_token(user_id)
+
+        await self.redis.set_value(
+            f"refresh:{jti}",
+            str(user_id),
+            ttl=60 * 60 * 24 * REFRESH_TOKEN_EXPIRE_DAYS
+        )
+
+        return {
+            "access_token": access,
+            "refresh_token": refresh
+        }
 
     async def register(self, create: UserCreate):
 
@@ -34,19 +54,7 @@ class AuthService:
 
             await self.uow.users.create(user)
 
-            access = create_access_token(user.id)
-            refresh = create_refresh_token(user.id)
-
-            await self.redis.set_value(
-                f"refresh:{user.id}",
-                refresh,
-                ttl=60 * 60 * 24 * REFRESH_TOKEN_EXPIRE_DAYS
-            )
-
-            return {
-                "access_token": access,
-                "refresh_token": refresh
-            }
+            return await self.create_tokens(user.id)
 
     async def login(self, login: UserLogin):
 
@@ -63,50 +71,48 @@ class AuthService:
             if not verify_password(password, user.password_hash):
                 raise HTTPException(401, "Invalid credentials")
 
-            access = create_access_token(user.id)
-            refresh = create_refresh_token(user.id)
-
-            await self.redis.set(
-                f"refresh:{user.id}",
-                refresh,
-                ex=60 * 60 * 24 * REFRESH_TOKEN_EXPIRE_DAYS
-            )
-
-            return {
-                "access_token": access,
-                "refresh_token": refresh
-            }
+            return await self.create_tokens(user.id)
 
     async def refresh(self, refresh_token: str):
         payload = decode_token(refresh_token)
 
-        if not payload:
+        if not payload or payload["type"] != "refresh":
             raise HTTPException(401)
 
-        if payload["type"] != "refresh":
-            raise HTTPException(401)
-
+        jti = payload.get("jti")
         user_id = int(payload["sub"])
 
-        stored = await self.redis.get(f"refresh:{user_id}")
+        stored = await self.redis.get(f"refresh:{jti}")
 
         if stored != refresh_token:
-            raise HTTPException(401)
+            raise HTTPException(401, "Token revoked or reused")
 
-        new_access = create_access_token(user_id)
+        await self.redis.delete_key(f"refresh:{jti}")
 
-        return {"access_token": new_access}
+        return await self.create_tokens(user_id)
 
-    async def logout(self, refresh_token: str):
+    async def logout(self, logout_request: LogoutRequest):
 
-        payload = decode_token(refresh_token)
+        access_payload = decode_token(logout_request.access_token)
 
-        if not payload:
-            raise HTTPException(401)
+        if not access_payload or access_payload["type"] != "access":
+            raise HTTPException(401, "Token revoked or reused")
 
-        if payload["type"] != "refresh":
-            raise HTTPException(401)
+        jti = access_payload.get("jti")
+        exp = access_payload.get("exp")
+        ttl = exp - int(datetime.utcnow().timestamp())
 
-        user_id = int(payload["sub"])
+        if ttl > 0:
+            await self.redis.set_value(
+                f"blacklist:{jti}",
+                "1",
+                ttl=ttl
+            )
 
-        await self.redis.delete_key(f"refresh:{user_id}")
+        refresh_payload = decode_token(logout_request.refresh_token)
+
+        if not refresh_payload or refresh_payload["type"] != "refresh":
+            raise HTTPException(401, "Token revoked or reused")
+
+        jti = refresh_payload.get("jti")
+        await self.redis.delete_key(f"refresh:{jti}")
