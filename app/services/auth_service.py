@@ -7,7 +7,6 @@ from app.core.security.jwt import create_access_token, create_refresh_token, dec
 from app.core.security.password import verify_password, hash_password
 from app.models import User
 from app.schemas.jwt.logout_request import LogoutRequest
-from app.schemas.jwt.token_response import TokenResponse
 from app.schemas.user.user_create import UserCreate
 from app.schemas.user.user_login import UserLogin
 
