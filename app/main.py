@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from loguru import logger
 
-from app.api import auth_router
+from app.api import auth_router, user_router
 from app.core.exceptions import setup_exception_handlers
 from app.core.loguru_config import setup_logging
 from app.db.database import engine
@@ -35,6 +35,7 @@ app = FastAPI(lifespan=lifespan)
 
 setup_exception_handlers(app)
 app.include_router(auth_router)
+app.include_router(user_router)
 
 
 @app.get("/health")
