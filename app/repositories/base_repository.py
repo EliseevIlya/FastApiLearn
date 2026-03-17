@@ -34,3 +34,8 @@ class BaseRepository(Generic[ModelType]):
 
     async def delete(self, obj: ModelType):
         await self.session.delete(obj)
+
+    async def delete_by_id(self, id: int):
+        obj = await self.get(id)
+        if obj:
+            await self.session.delete(obj)

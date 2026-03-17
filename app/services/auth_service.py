@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import get_refresh_expire_days
 from app.core.security.jwt import create_access_token, create_refresh_token, decode_token
@@ -44,14 +45,19 @@ class AuthService:
             exists = await self.uow.users.get_by_email(email)
 
             if exists:
-                raise ValueError("User already exists")
+                raise HTTPException(400, "User already exists")
 
             user = User(
                 email=email,
                 password_hash=hash_password(password)
             )
 
-            await self.uow.users.create(user)
+            try:
+                await self.uow.users.create(user)
+            except IntegrityError:
+                raise IntegrityError
+            except Exception:
+                raise Exception
 
             return await self.create_tokens(user.id)
 
