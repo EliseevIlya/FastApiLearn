@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from loguru import logger
 
 from app.api import auth_router, user_router
-from app.core.exceptions import setup_exception_handlers
+from app.core.exceptions.exception_handlers import setup_exception_handlers
+
 from app.core.loguru_config import setup_logging
 from app.db.database import engine
 from app.db.redis import redis_client_init

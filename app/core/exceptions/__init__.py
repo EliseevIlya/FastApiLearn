@@ -1,6 +1,1 @@
-from .exception_handlers import http_exception_handler
-from .exception_handlers import integrity_exception_handler
-from .exception_handlers import global_exception_handler
-from .exception_handlers import setup_exception_handlers
-
 from .custom_exceptions import EmailAlreadyExistsException
