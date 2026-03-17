@@ -1,5 +1,4 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
 from app.models.comment import Comment

@@ -1,8 +1,7 @@
 from typing import Type, TypeVar, Generic, Optional, List
 
-from sqlalchemy.orm import selectinload
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import SQLModel, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 ModelType = TypeVar("ModelType", bound=SQLModel)
 

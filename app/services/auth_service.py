@@ -90,9 +90,9 @@ class AuthService:
 
         return await self.create_tokens(user_id)
 
-    async def logout(self, logout_request: LogoutRequest):
+    async def logout(self, access_token: str, refresh_token: str):
 
-        access_payload = decode_token(logout_request.access_token)
+        access_payload = decode_token(access_token)
 
         if not access_payload or access_payload["type"] != "access":
             raise HTTPException(401, "Token revoked or reused")
@@ -108,7 +108,7 @@ class AuthService:
                 ttl=ttl
             )
 
-        refresh_payload = decode_token(logout_request.refresh_token)
+        refresh_payload = decode_token(refresh_token)
 
         if not refresh_payload or refresh_payload["type"] != "refresh":
             raise HTTPException(401, "Token revoked or reused")

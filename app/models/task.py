@@ -1,13 +1,11 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
-
-from typing import Optional, List
+from typing import Optional
 
 from sqlmodel import Field, Relationship
 
 from app.models.base_model import BaseModel
-from app.models.enum.task_status import TaskStatus
 
+from app.models.enum.task_status import TaskStatus
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.project import Project
     from app.models.user import User
@@ -17,7 +15,7 @@ if TYPE_CHECKING:
 class Task(BaseModel, table=True):
     __tablename__ = "tasks"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     title: str
     description: str | None = None
@@ -27,7 +25,6 @@ class Task(BaseModel, table=True):
     project_id: int = Field(foreign_key="projects.id")
     assignee_id: int | None = Field(default=None, foreign_key="users.id")
 
-    project: Optional[Project] = Relationship(back_populates="tasks")
-    assignee: Optional[User] = Relationship(back_populates="tasks")
-
-    comments: List[Comment] = Relationship(back_populates="task")
+    project: Optional["Project"] = Relationship(back_populates="tasks")
+    assignee: Optional["User"] = Relationship(back_populates="tasks")
+    comments: list["Comment"] = Relationship(back_populates="task")

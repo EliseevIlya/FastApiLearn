@@ -7,7 +7,7 @@ from app.api import auth_router, user_router
 from app.core.exceptions.exception_handlers import setup_exception_handlers
 
 from app.core.loguru_config import setup_logging
-from app.db.database import engine
+from app.db.database import engine, init_db
 from app.db.redis import redis_client_init
 
 
@@ -17,6 +17,8 @@ async def lifespan(app: FastAPI):
     setup_logging()
 
     await redis_client_init.connect()
+
+    await init_db()
 
     async with engine.begin() as conn:
         pass

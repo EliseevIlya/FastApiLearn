@@ -1,6 +1,5 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.project import Project
 from app.repositories.base_repository import BaseRepository

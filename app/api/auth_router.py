@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPBearer
 
 from app.db.redis import RedisClient, get_redis
 from app.db.unit_of_work import UnitOfWork, get_uow
@@ -6,6 +7,7 @@ from app.schemas.jwt import TokenResponse, RefreshRequest, LogoutRequest
 from app.schemas.user import UserCreate, UserLogin
 from app.services.auth_service import AuthService
 
+security = HTTPBearer()
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"]
@@ -47,12 +49,15 @@ async def refresh(
 
 @router.post("/logout")
 async def logout(
-        data: LogoutRequest,
-        uow: UnitOfWork = Depends(get_uow),
-        redis: RedisClient = Depends(get_redis)
+    data: LogoutRequest,
+    credentials=Depends(security),
+    uow: UnitOfWork = Depends(get_uow),
+    redis: RedisClient = Depends(get_redis)
 ):
-    service = AuthService(uow, redis)
+    access_token = credentials.credentials
+    refresh_token = data.refresh_token
 
-    await service.logout(data)
+    service = AuthService(uow, redis)
+    await service.logout(access_token, refresh_token)
 
     return {"status": "ok"}
